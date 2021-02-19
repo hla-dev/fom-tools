@@ -2,4 +2,5 @@
 
 members = [
   "fom-tools-lib",
+  "fom-tools-cli",
 ]
