@@ -124,19 +124,214 @@ struct ObjectClassType {
 }
 
 enum SharingType {
+    Publish,
+    Subscribe,
+    PublishSubscribe,
     Neither,
 }
 
-struct AttributeType {}
-struct InteractionsType {}
+struct AttributeType {
+    name: String,
+    data_type: ReferenceType,
+    update_type: UpdateType,
+    update_condition: Option<String>,
+    onwership: OwnershipType,
+    sharing: SharingType,
+    dimensions: Option<Vec<ReferenceType>>,
+    transportation: ReferenceType,
+    order: OrderType,
+    semantics: Option<String>,
+}
+
+enum UpdateType {
+    Static,
+    Periodic,
+    Conditional,
+    NA,
+}
+
+enum OwnershipType {
+    Divest,
+    Acquire,
+    DivestAcquire,
+    NoTransfer,
+}
+
+enum OrderType {
+    Receive,
+    TimeStamp,
+}
+
+struct InteractionsType {
+    interactions: InteractionClassType,
+}
+
+struct InteractionClassType {
+    name: String,
+    sharing: SharingType,
+    dimensions: Option<Vec<ReferenceType>>,
+    transportation: ReferenceType,
+    order: OrderType,
+    semantics: Option<String>,
+    parameters: Option<Vec<ParameterType>>,
+    interaction_classes: Option<Vec<InteractionClassType>>,
+}
+
+struct ParameterType {
+    name: String,
+    data_type: ReferenceType,
+    semantics: Option<String>,
+}
+
 struct DimensionsType {}
-struct TimeType {}
-struct TagsType {}
-struct SynchronizationsType {}
-struct TransportationsType {}
-struct SwitchesType {}
-struct UpdateRatesType {}
-struct DataTypesType {}
+struct TimeType {
+    time_stamp: Option<TimeTypeType>,
+    lookahead: Option<TimeTypeType>,
+}
+
+struct TimeTypeType {
+    data_type: ReferenceType,
+    semantics: Option<String>,
+}
+
+struct TagsType {
+    update_reflect_tag: Option<TagType>,
+    send_receive_tag: Option<TagType>,
+    delete_remove_tag: Option<TagType>,
+    divestiture_request_tag: Option<TagType>,
+    divestiture_completion_tag: Option<TagType>,
+    acquisition_request_tag: Option<TagType>,
+    request_update_tag: Option<TagType>,
+}
+
+struct TagType {
+    data_type: ReferenceType,
+    semantics: Option<String>,
+}
+
+struct SynchronizationsType {
+    synchronization_points: Option<Vec<SynchronizationPointType>>,
+}
+
+struct SynchronizationPointType {
+    label: String,
+    data_type: Option<ReferenceType>,
+    capability: CapabilityType,
+    semantics: Option<String>,
+}
+
+enum CapabilityType {
+    Register,
+    Achieve,
+    RegisterAchieve,
+    NoSynch,
+    Na,
+}
+
+struct TransportationsType {
+    transportations: Option<Vec<TransportationType>>,
+}
+
+struct TransportationType {
+    name: String,
+    reliable: ReliableType,
+    semantics: Option<String>,
+}
+
+enum ReliableType {
+    Yes,
+    No,
+}
+
+struct SwitchesType {
+    auto_provide: SwitchType,
+    convey_region_designator_sets: SwitchType,
+    convey_producing_federate: SwitchType,
+    attribute_scope_advisory: SwitchType,
+    attribute_relevance_advisory: SwitchType,
+    object_class_relevance_advisory: SwitchType,
+    interaction_relevance_advisory: SwitchType,
+    service_reporting: SwitchType,
+    exception_reporting: SwitchType,
+    delay_subscription_evaluation: SwitchType,
+    automatic_resign_action: ResignSwitchType,
+}
+
+struct SwitchType {
+    is_enabled: bool,
+}
+
+enum ResignSwitchType {
+    UnconditionallyDivestAttributes,
+    DeleteObjects,
+    CancelPendingOwnershipAcquisitions,
+    DeleteObjectsThenDivest,
+    CancelThenDeleteThenDivest,
+    NoAction,
+}
+
+struct UpdateRatesType {
+    update_rates: Option<Vec<UpdateRateType>>,
+}
+
+struct UpdateRateType {
+    name: String,
+    rate: RateType,
+    semantics: Option<String>,
+}
+
+struct RateType {
+    value: String,
+}
+
+struct DataTypesType {
+    basic_data_representations: BasicDataRepresentationsType,
+    simple_data_types: SimpleDataTypesType,
+    enumerated_data_types: EnumeratedDataTypesType,
+    array_data_types: ArrayDataTypesType,
+    fixed_record_data_types: FixedRecordDataTypesType,
+    variand_record_data_types: VariantRecordDataTypesType,
+}
+
+struct BasicDataRepresentationsType {
+    basic_datas: Option<Vec<BasicDataType>>,
+}
+
+struct BasicDataType {
+    name: String,
+    size: SizeType,
+    interpretation: String,
+    endian: EndianType,
+    encoding: String,
+}
+
+struct SizeType {
+    size: u8,
+}
+
+enum EndianType {
+    Big,
+    Little,
+}
+
+struct SimpleDataTypesType {
+    simple_datas: Option<Vec<SimpleDataType>>,
+}
+
+struct SimpleDataType {
+    name: String,
+    representation: ReferenceType,
+    units: String,
+    resolution: Option<String>,
+    accuracy: Option<String>,
+    semantics: Option<String>,
+}
+
+struct EnumeratedDataTypesType {}
+struct ArrayDataTypesType {}
+struct FixedRecordDataTypesType {}
+struct VariantRecordDataTypesType {}
+
 struct NotesType {}
 
 pub fn parse<R: Read>(r: R) -> Result<(), ParseError> {
