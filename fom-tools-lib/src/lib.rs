@@ -31,7 +31,7 @@ struct ModelIdentificationType {
     use_history: Option<Vec<String>>,
     keywords: Option<Vec<KeywordType>>,
     poc: Vec<PocType>,
-    references: Option<Vec<ReferenceType>>,
+    references: Option<Vec<IdReferenceType>>,
     other: Option<String>,
     glyph: Option<GlyphType>,
 }
@@ -78,7 +78,7 @@ enum PocTypeType {
     TechnicalPoc,
 }
 
-struct ReferenceType {
+struct IdReferenceType {
     reference_type: String,
     identification: String,
 }
@@ -141,6 +141,10 @@ struct AttributeType {
     transportation: ReferenceType,
     order: OrderType,
     semantics: Option<String>,
+}
+
+struct ReferenceType {
+    value: String,
 }
 
 enum UpdateType {
@@ -327,12 +331,88 @@ struct SimpleDataType {
     semantics: Option<String>,
 }
 
-struct EnumeratedDataTypesType {}
-struct ArrayDataTypesType {}
-struct FixedRecordDataTypesType {}
-struct VariantRecordDataTypesType {}
+struct EnumeratedDataTypesType {
+    enumerated_datas: Option<Vec<EnumeratedDataType>>,
+}
 
-struct NotesType {}
+struct EnumeratedDataType {
+    name: String,
+    representation: ReferenceType,
+    semantics: Option<String>,
+    enumerators: Option<Vec<EnumeratorType>>,
+}
+
+struct EnumeratorType {
+    name: String,
+    value: Vec<String>,
+}
+
+struct ArrayDataTypesType {
+    array_datas: Option<Vec<ArrayDataType>>,
+}
+
+struct ArrayDataType {
+    name: String,
+    data_type: ReferenceType,
+    cardinality: String, // needs to match a pattern
+    encoding: ArrayDataTypeEncodingType,
+    semantics: Option<String>,
+}
+
+enum ArrayDataTypeEncodingType {
+    HlaFixedArray,
+    HlaVariableArray,
+}
+
+struct FixedRecordDataTypesType {
+    fixed_record_datas: Option<Vec<FixedRecordDataType>>,
+}
+
+struct FixedRecordDataType {
+    name: String,
+    encoding: FixedRecordEncodingType,
+    semantics: Option<String>,
+    fields: Option<Vec<FieldType>>,
+}
+
+enum FixedRecordEncodingType {
+    HlaFixedRecord,
+}
+
+struct FieldType {
+    name: String,
+    data_type: ReferenceType,
+    semantics: Option<String>,
+}
+
+struct VariantRecordDataTypesType {
+    name: String,
+    discriminant: String,
+    data_type: ReferenceType,
+    alternatives: Option<Vec<AlternativeType>>,
+    encoding: VariantRecordEncodingType,
+    semantics: Option<String>,
+}
+
+struct AlternativeType {
+    enumerator: String,
+    name: Option<String>,
+    data_type: Option<ReferenceType>,
+    semantics: Option<String>,
+}
+
+enum VariantRecordEncodingType {
+    HlaVariantRecord,
+}
+
+struct NotesType {
+    notes: Option<Vec<NoteType>>,
+}
+
+struct NoteType {
+    label: String,
+    semantics: Option<String>,
+}
 
 pub fn parse<R: Read>(r: R) -> Result<(), ParseError> {
     let fom_as_xml = Element::parse(r)?;
