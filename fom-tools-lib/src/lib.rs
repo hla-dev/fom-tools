@@ -3,7 +3,11 @@ use xmltree::{Element, ParseError, XMLNode};
 
 /// Return the trimmed text content of the provided element
 fn get_element_text(e: &Element) -> String {
-    e.get_text().unwrap().into_owned().trim().to_string()
+    if let Some(text) = e.get_text() {
+        text.into_owned().trim().to_string()
+    } else {
+        String::from("")
+    }
 }
 
 /// Return the trimmed text content of the named child element of the provided
@@ -11,6 +15,15 @@ fn get_element_text(e: &Element) -> String {
 fn get_text_of_child_element(root: &Element, child_element_name: &str) -> Option<String> {
     if let Some(e) = root.get_child(child_element_name) {
         Some(get_element_text(e))
+    } else {
+        None
+    }
+}
+
+///
+fn get_text_of_attribute(element: &Element, attribute_name: &str) -> Option<String> {
+    if let Some(attribute_value) = element.attributes.get(attribute_name) {
+        Some(attribute_value.clone())
     } else {
         None
     }
@@ -26,6 +39,18 @@ fn get_text_of_child_element_or_panic(
 ) -> String {
     match get_text_of_child_element(root, child_element_name) {
         Some(text) => text,
+        None => panic!("{}", panic_message),
+    }
+}
+
+///
+fn get_text_of_attribute_or_panic(
+    element: &Element,
+    attribute_name: &str,
+    panic_message: &str,
+) -> String {
+    match get_text_of_attribute(element, attribute_name) {
+        Some(attribute_value) => attribute_value,
         None => panic!("{}", panic_message),
     }
 }
@@ -274,11 +299,7 @@ impl From<&Element> for ModelIdentificationType {
             } else {
                 panic!("No 'modelIdentification -> description' element")
             },
-            use_limitation: if let Some(e) = e.get_child("useLimitation") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
+            use_limitation: get_text_of_child_element(e, "useLimitation"),
             use_history: {
                 let use_history = get_text_of_child_elements(e, "useHistory");
                 if use_history.len() == 0 {
@@ -339,6 +360,7 @@ pub enum SecurityClassificationType {
     Confidential,
     Secret,
     TopSecret,
+    Other(String),
 }
 
 impl From<&Element> for SecurityClassificationType {
@@ -349,10 +371,7 @@ impl From<&Element> for SecurityClassificationType {
             "Confidential" => SecurityClassificationType::Confidential,
             "Secret" => SecurityClassificationType::Secret,
             "Top Secret" => SecurityClassificationType::TopSecret,
-            _ => panic!(
-                "Unknown 'modelIdentification -> securityClassification': {}",
-                text
-            ),
+            _ => SecurityClassificationType::Other(text),
         }
     }
 }
@@ -363,6 +382,7 @@ pub enum ApplicationDomainType {
     TestAndEvaluation,
     Engineering,
     Acquisition,
+    Other(String),
 }
 
 impl From<&Element> for ApplicationDomainType {
@@ -374,10 +394,7 @@ impl From<&Element> for ApplicationDomainType {
             "Test and Evaluation" => ApplicationDomainType::TestAndEvaluation,
             "Engineering" => ApplicationDomainType::Engineering,
             "Acquisition" => ApplicationDomainType::Acquisition,
-            _ => panic!(
-                "Unknown 'modelIdentification -> applicationDomain' {}",
-                text
-            ),
+            _ => ApplicationDomainType::Other(text),
         }
     }
 }
@@ -497,7 +514,7 @@ impl From<&Element> for IdReferenceType {
 }
 
 pub struct GlyphType {
-    pub href: String,
+    pub href: Option<String>,
     pub glyph_type: GlyphTypeType,
     pub height: u16,
     pub width: u16,
@@ -507,31 +524,31 @@ pub struct GlyphType {
 impl From<&Element> for GlyphType {
     fn from(e: &Element) -> Self {
         Self {
-            href: if let Some(e) = e.get_child("href") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> glyph -> href' found")
-            },
-            glyph_type: if let Some(e) = e.get_child("type") {
-                GlyphTypeType::from(e)
-            } else {
-                panic!("No 'modelIdentification -> glyph -> type' found")
-            },
-            height: if let Some(e) = e.get_child("height") {
-                get_element_text(e).parse().unwrap()
-            } else {
-                panic!("No 'modelIdentification -> glyph -> height' found")
-            },
-            width: if let Some(e) = e.get_child("width") {
-                get_element_text(e).parse().unwrap()
-            } else {
-                panic!("No 'modelIdentification -> glyph -> width' found")
-            },
-            alt: if let Some(e) = e.get_child("alt") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> glyph -> alt' found")
-            },
+            href: get_text_of_child_element(e, "href"),
+            glyph_type: get_attribute_as_type_or_panic(
+                e,
+                "type",
+                "No 'modelIdentification -> glyph[type]' found",
+            ),
+            height: get_text_of_attribute_or_panic(
+                e,
+                "height",
+                "No 'modelIdentification -> glyph[height]' found",
+            )
+            .parse()
+            .unwrap(),
+            width: get_text_of_attribute_or_panic(
+                e,
+                "width",
+                "No 'modelIdentification -> glyph[width]' found",
+            )
+            .parse()
+            .unwrap(),
+            alt: get_text_of_attribute_or_panic(
+                e,
+                "alt",
+                "No 'modelIdentification -> glyph[alt]' found",
+            ),
         }
     }
 }
@@ -544,16 +561,18 @@ pub enum GlyphTypeType {
     Tiff,
 }
 
-impl From<&Element> for GlyphTypeType {
-    fn from(e: &Element) -> Self {
-        let text = get_element_text(e);
-        match text.as_str() {
+impl From<&String> for GlyphTypeType {
+    fn from(attribute: &String) -> Self {
+        match attribute.to_uppercase().as_str() {
             "BITMAP" => GlyphTypeType::Bitmap,
             "JPG" => GlyphTypeType::Jpg,
             "GIF" => GlyphTypeType::Gif,
             "PNG" => GlyphTypeType::Png,
             "TIFF" => GlyphTypeType::Tiff,
-            _ => panic!("Unknown 'modelIdentification -> glyph -> type': {}", text),
+            _ => panic!(
+                "Unknown 'modelIdentification -> glyph -> type': {}",
+                attribute
+            ),
         }
     }
 }
