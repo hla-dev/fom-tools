@@ -1,7 +1,3 @@
-extern crate clap;
-
-use clap::App;
-use fom_tools_lib;
 use std::fs::File;
 
 fn main() {

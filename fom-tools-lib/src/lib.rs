@@ -13,20 +13,13 @@ fn get_element_text(e: &Element) -> String {
 /// Return the trimmed text content of the named child element of the provided
 /// root element. Return None if the named child element does not exist.
 fn get_text_of_child_element(root: &Element, child_element_name: &str) -> Option<String> {
-    if let Some(e) = root.get_child(child_element_name) {
-        Some(get_element_text(e))
-    } else {
-        None
-    }
+    root.get_child(child_element_name)
+        .map(|e| get_element_text(e))
 }
 
 ///
 fn get_text_of_attribute(element: &Element, attribute_name: &str) -> Option<String> {
-    if let Some(attribute_value) = element.attributes.get(attribute_name) {
-        Some(attribute_value.clone())
-    } else {
-        None
-    }
+    element.attributes.get(attribute_name).cloned()
 }
 
 /// Return the trimmed text content of the named child element of the provided
@@ -43,18 +36,6 @@ fn get_text_of_child_element_or_panic(
     }
 }
 
-///
-fn get_text_of_attribute_or_panic(
-    element: &Element,
-    attribute_name: &str,
-    panic_message: &str,
-) -> String {
-    match get_text_of_attribute(element, attribute_name) {
-        Some(attribute_value) => attribute_value,
-        None => panic!("{}", panic_message),
-    }
-}
-
 /// Return an instance of the generic type created from the named child
 /// element of the provided root element. Return None if the named child
 /// element does not exist.
@@ -62,11 +43,7 @@ fn get_child_element_as_type<'a, T: From<&'a Element>>(
     root: &'a Element,
     child_element_name: &'a str,
 ) -> Option<T> {
-    if let Some(e) = root.get_child(child_element_name) {
-        Some(T::from(e))
-    } else {
-        None
-    }
+    root.get_child(child_element_name).map(|e| T::from(e))
 }
 
 /// Return an instance of the generic type created from the named attribute
@@ -76,11 +53,10 @@ fn get_attribute_as_type<'a, T: From<&'a String>>(
     element: &'a Element,
     attribute_name: &'a str,
 ) -> Option<T> {
-    if let Some(attribute_value) = element.attributes.get(attribute_name) {
-        Some(T::from(attribute_value))
-    } else {
-        None
-    }
+    element
+        .attributes
+        .get(attribute_name)
+        .map(|attribute_value| T::from(attribute_value))
 }
 
 /// Return an instance of the generic type created from the named child
@@ -206,7 +182,7 @@ impl From<&Element> for ModelIdentificationType {
             security_classification: get_child_element_as_type(e, "securityClassification"),
             release_restriction: {
                 let release_restrictions = get_text_of_child_elements(e, "releaseRestriction");
-                if release_restrictions.len() == 0 {
+                if release_restrictions.is_empty() {
                     None
                 } else {
                     Some(release_restrictions)
@@ -218,7 +194,7 @@ impl From<&Element> for ModelIdentificationType {
             use_limitation: get_text_of_child_element(e, "useLimitation"),
             use_history: {
                 let use_history = get_text_of_child_elements(e, "useHistory");
-                if use_history.len() == 0 {
+                if use_history.is_empty() {
                     None
                 } else {
                     Some(use_history)
@@ -571,11 +547,9 @@ impl From<&Element> for AttributeType {
             update_condition: get_text_of_child_element(e, "updateCondition"),
             onwership: get_child_element_as_type(e, "ownership"),
             sharing: get_child_element_as_type(e, "sharing"),
-            dimensions: if let Some(e) = e.get_child("dimensions") {
-                Some(get_text_of_child_elements_as_type(e, "dimension"))
-            } else {
-                None
-            },
+            dimensions: e
+                .get_child("dimensions")
+                .map(|e| get_text_of_child_elements_as_type(e, "dimension")),
             transportation: get_child_element_as_type(e, "transportation"),
             order: get_child_element_as_type(e, "order"),
             semantics: get_text_of_child_element(e, "semantics"),
