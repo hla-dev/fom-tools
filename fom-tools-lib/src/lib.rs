@@ -142,107 +142,55 @@ fn get_text_of_child_elements_as_type<'a, T: From<&'a Element>>(
 }
 
 pub struct ObjectModelType {
-    pub model_identification: ModelIdentificationType,
+    pub model_identification: Option<ModelIdentificationType>,
     pub service_utilization: Option<ServiceUtiliizationType>,
-    pub objects: ObjectsType,
-    pub interactions: InteractionsType,
-    pub dimensions: DimensionsType,
+    pub objects: Option<ObjectsType>,
+    pub interactions: Option<InteractionsType>,
+    pub dimensions: Option<DimensionsType>,
     pub time: Option<TimeType>,
     pub tags: Option<TagsType>,
     pub synchronizations: Option<SynchronizationsType>,
-    pub transportations: TransportationsType,
-    pub switches: SwitchesType,
+    pub transportations: Option<TransportationsType>,
+    pub switches: Option<SwitchesType>,
     pub update_rates: Option<UpdateRatesType>,
-    pub data_types: DataTypesType,
+    pub data_types: Option<DataTypesType>,
     pub notes: Option<NotesType>,
 }
 
 impl From<&Element> for ObjectModelType {
     fn from(e: &Element) -> Self {
         Self {
-            model_identification: if let Some(e) = e.get_child("modelIdentification") {
-                ModelIdentificationType::from(e)
-            } else {
-                panic!("No 'modelIdentification' element")
-            },
-            service_utilization: if let Some(e) = e.get_child("serviceUtilization") {
-                Some(ServiceUtiliizationType::from(e))
-            } else {
-                None
-            },
-            objects: if let Some(e) = e.get_child("objects") {
-                ObjectsType::from(e)
-            } else {
-                panic!("No 'objects' element")
-            },
-            interactions: if let Some(e) = e.get_child("interactions") {
-                InteractionsType::from(e)
-            } else {
-                panic!("No 'interactions' element")
-            },
-            dimensions: if let Some(e) = e.get_child("dimensions") {
-                DimensionsType::from(e)
-            } else {
-                panic!("No 'dimensions' element")
-            },
-            time: if let Some(e) = e.get_child("time") {
-                Some(TimeType::from(e))
-            } else {
-                None
-            },
-            tags: if let Some(e) = e.get_child("tags") {
-                Some(TagsType::from(e))
-            } else {
-                None
-            },
-            synchronizations: if let Some(e) = e.get_child("synchronizations") {
-                Some(SynchronizationsType::from(e))
-            } else {
-                None
-            },
-            transportations: if let Some(e) = e.get_child("transportations") {
-                TransportationsType::from(e)
-            } else {
-                panic!("No 'transportations' element")
-            },
-            switches: if let Some(e) = e.get_child("switches") {
-                SwitchesType::from(e)
-            } else {
-                panic!("No 'switches' element")
-            },
-            update_rates: if let Some(e) = e.get_child("updateRates") {
-                Some(UpdateRatesType::from(e))
-            } else {
-                None
-            },
-            data_types: if let Some(e) = e.get_child("dataTypes") {
-                DataTypesType::from(e)
-            } else {
-                panic!("No 'dataTypes' element")
-            },
-            notes: if let Some(e) = e.get_child("notes") {
-                Some(NotesType::from(e))
-            } else {
-                None
-            },
+            model_identification: get_child_element_as_type(e, "modelIdentification"),
+            service_utilization: get_child_element_as_type(e, "serviceUtilization"),
+            objects: get_child_element_as_type(e, "objects"),
+            interactions: get_child_element_as_type(e, "interactions"),
+            dimensions: get_child_element_as_type(e, "dimensions"),
+            time: get_child_element_as_type(e, "time"),
+            tags: get_child_element_as_type(e, "tags"),
+            synchronizations: get_child_element_as_type(e, "synchronizations"),
+            transportations: get_child_element_as_type(e, "transportations"),
+            switches: get_child_element_as_type(e, "switches"),
+            update_rates: get_child_element_as_type(e, "updateRates"),
+            data_types: get_child_element_as_type(e, "dataTypes"),
+            notes: get_child_element_as_type(e, "notes"),
         }
     }
 }
 
 pub struct ModelIdentificationType {
-    pub name: String,
-    pub model_type: ModelType,
-    pub version: String,
-    pub modification_date: String,
-    pub security_classification: SecurityClassificationType,
+    pub name: Option<String>,
+    pub model_type: Option<ModelType>,
+    pub version: Option<String>,
+    pub modification_date: Option<String>,
+    pub security_classification: Option<SecurityClassificationType>,
     pub release_restriction: Option<Vec<String>>,
     pub purpose: Option<String>,
     pub application_domain: Option<ApplicationDomainType>,
-    pub description: String,
+    pub description: Option<String>,
     pub use_limitation: Option<String>,
     pub use_history: Option<Vec<String>>,
     pub keywords: Option<Vec<KeywordType>>,
-    pub poc: Vec<PocType>,
+    pub poc: Option<Vec<PocType>>,
     pub references: Option<Vec<IdReferenceType>>,
     pub other: Option<String>,
     pub glyph: Option<GlyphType>,
@@ -251,31 +199,11 @@ pub struct ModelIdentificationType {
 impl From<&Element> for ModelIdentificationType {
     fn from(e: &Element) -> Self {
         Self {
-            name: if let Some(e) = e.get_child("name") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> name' element")
-            },
-            model_type: if let Some(e) = e.get_child("type") {
-                ModelType::from(e)
-            } else {
-                panic!("No 'modelIdentification -> type' element")
-            },
-            version: if let Some(e) = e.get_child("version") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> version' element")
-            },
-            modification_date: if let Some(e) = e.get_child("modificationDate") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> modificationDate' element")
-            },
-            security_classification: if let Some(e) = e.get_child("securityClassification") {
-                SecurityClassificationType::from(e)
-            } else {
-                panic!("No 'modelIdentification -> securityClassification' element")
-            },
+            name: get_text_of_child_element(e, "name"),
+            model_type: get_child_element_as_type(e, "type"),
+            version: get_text_of_child_element(e, "version"),
+            modification_date: get_text_of_child_element(e, "modificationDate"),
+            security_classification: get_child_element_as_type(e, "securityClassification"),
             release_restriction: {
                 let release_restrictions = get_text_of_child_elements(e, "releaseRestriction");
                 if release_restrictions.len() == 0 {
@@ -284,21 +212,9 @@ impl From<&Element> for ModelIdentificationType {
                     Some(release_restrictions)
                 }
             },
-            purpose: if let Some(e) = e.get_child("purpose") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
-            application_domain: if let Some(e) = e.get_child("applicationDomain") {
-                Some(ApplicationDomainType::from(e))
-            } else {
-                None
-            },
-            description: if let Some(e) = e.get_child("description") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> description' element")
-            },
+            purpose: get_text_of_child_element(e, "purpose"),
+            application_domain: get_child_element_as_type(e, "applicationDomain"),
+            description: get_text_of_child_element(e, "description"),
             use_limitation: get_text_of_child_element(e, "useLimitation"),
             use_history: {
                 let use_history = get_text_of_child_elements(e, "useHistory");
@@ -310,31 +226,30 @@ impl From<&Element> for ModelIdentificationType {
             },
             keywords: {
                 let keywords = get_text_of_child_elements_as_type(e, "keyword");
-                if keywords.len() == 0 {
+                if keywords.is_empty() {
                     None
                 } else {
                     Some(keywords)
                 }
             },
-            poc: get_text_of_child_elements_as_type(e, "poc"),
+            poc: {
+                let pocs = get_text_of_child_elements_as_type(e, "poc");
+                if pocs.is_empty() {
+                    None
+                } else {
+                    Some(pocs)
+                }
+            },
             references: {
                 let references = get_text_of_child_elements_as_type(e, "reference");
-                if references.len() == 0 {
+                if references.is_empty() {
                     None
                 } else {
                     Some(references)
                 }
             },
-            other: if let Some(e) = e.get_child("other") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
-            glyph: if let Some(e) = e.get_child("glyph") {
-                Some(GlyphType::from(e))
-            } else {
-                None
-            },
+            other: get_text_of_child_element(e, "other"),
+            glyph: get_child_element_as_type(e, "glyph"),
         }
     }
 }
@@ -342,6 +257,7 @@ impl From<&Element> for ModelIdentificationType {
 pub enum ModelType {
     FOM,
     SOM,
+    Other(String),
 }
 
 impl From<&Element> for ModelType {
@@ -350,7 +266,7 @@ impl From<&Element> for ModelType {
         match text.as_str() {
             "FOM" => ModelType::FOM,
             "SOM" => ModelType::SOM,
-            _ => panic!("Unknown 'modelidentification -> type': {}", text),
+            _ => ModelType::Other(text),
         }
     }
 }
@@ -401,28 +317,20 @@ impl From<&Element> for ApplicationDomainType {
 
 pub struct KeywordType {
     pub taxonomy: Option<String>,
-    pub keyword_value: String,
+    pub keyword_value: Option<String>,
 }
 
 impl From<&Element> for KeywordType {
     fn from(e: &Element) -> Self {
         Self {
-            taxonomy: if let Some(e) = e.get_child("taxonomy") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
-            keyword_value: if let Some(e) = e.get_child("keywordValue") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> keyword -> keywordValue' element")
-            },
+            taxonomy: get_text_of_child_element(e, "taxonomy"),
+            keyword_value: get_text_of_child_element(e, "keywordValue"),
         }
     }
 }
 
 pub struct PocType {
-    pub poc_type: PocTypeType,
+    pub poc_type: Option<PocTypeType>,
     pub poc_name: Option<String>,
     pub poc_org: Option<String>,
     pub poc_telephones: Option<Vec<String>>,
@@ -432,21 +340,9 @@ pub struct PocType {
 impl From<&Element> for PocType {
     fn from(e: &Element) -> Self {
         Self {
-            poc_type: if let Some(e) = e.get_child("pocType") {
-                PocTypeType::from(e)
-            } else {
-                panic!("No 'modelIdentification -> poc -> pocType' found")
-            },
-            poc_name: if let Some(e) = e.get_child("pocName") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
-            poc_org: if let Some(e) = e.get_child("pocOrg") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
+            poc_type: get_child_element_as_type(e, "pocType"),
+            poc_name: get_text_of_child_element(e, "pocName"),
+            poc_org: get_text_of_child_element(e, "pocOrg"),
             poc_telephones: {
                 let telephones = get_text_of_child_elements(e, "pocTelephone");
                 if telephones.is_empty() {
@@ -474,6 +370,7 @@ pub enum PocTypeType {
     Sponsor,
     ReleaseAuthority,
     TechnicalPoc,
+    Other(String),
 }
 
 impl From<&Element> for PocTypeType {
@@ -486,69 +383,41 @@ impl From<&Element> for PocTypeType {
             "Sponsor" => PocTypeType::Sponsor,
             "Release authority" => PocTypeType::ReleaseAuthority,
             "Technical POC" => PocTypeType::TechnicalPoc,
-            _ => panic!("Unknown 'modelIdentification -> poc -> pocType': {}", text),
+            _ => PocTypeType::Other(text),
         }
     }
 }
 
 pub struct IdReferenceType {
-    pub reference_type: String,
-    pub identification: String,
+    pub reference_type: Option<String>,
+    pub identification: Option<String>,
 }
 
 impl From<&Element> for IdReferenceType {
     fn from(e: &Element) -> Self {
         Self {
-            reference_type: if let Some(e) = e.get_child("type") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> reference -> type' found")
-            },
-            identification: if let Some(e) = e.get_child("identification") {
-                get_element_text(e)
-            } else {
-                panic!("No 'modelIdentification -> reference -> identification' found")
-            },
+            reference_type: get_text_of_child_element(e, "type"),
+            identification: get_text_of_child_element(e, "identification"),
         }
     }
 }
 
 pub struct GlyphType {
     pub href: Option<String>,
-    pub glyph_type: GlyphTypeType,
-    pub height: u16,
-    pub width: u16,
-    pub alt: String,
+    pub glyph_type: Option<GlyphTypeType>,
+    pub height: Option<String>,
+    pub width: Option<String>,
+    pub alt: Option<String>,
 }
 
 impl From<&Element> for GlyphType {
     fn from(e: &Element) -> Self {
         Self {
-            href: get_text_of_child_element(e, "href"),
-            glyph_type: get_attribute_as_type_or_panic(
-                e,
-                "type",
-                "No 'modelIdentification -> glyph[type]' found",
-            ),
-            height: get_text_of_attribute_or_panic(
-                e,
-                "height",
-                "No 'modelIdentification -> glyph[height]' found",
-            )
-            .parse()
-            .unwrap(),
-            width: get_text_of_attribute_or_panic(
-                e,
-                "width",
-                "No 'modelIdentification -> glyph[width]' found",
-            )
-            .parse()
-            .unwrap(),
-            alt: get_text_of_attribute_or_panic(
-                e,
-                "alt",
-                "No 'modelIdentification -> glyph[alt]' found",
-            ),
+            href: get_text_of_attribute(e, "href"),
+            glyph_type: get_attribute_as_type(e, "type"),
+            height: get_text_of_attribute(e, "height"),
+            width: get_text_of_attribute(e, "width"),
+            alt: get_text_of_attribute(e, "alt"),
         }
     }
 }
@@ -559,6 +428,7 @@ pub enum GlyphTypeType {
     Gif,
     Png,
     Tiff,
+    Other(String),
 }
 
 impl From<&String> for GlyphTypeType {
@@ -569,77 +439,50 @@ impl From<&String> for GlyphTypeType {
             "GIF" => GlyphTypeType::Gif,
             "PNG" => GlyphTypeType::Png,
             "TIFF" => GlyphTypeType::Tiff,
-            _ => panic!(
-                "Unknown 'modelIdentification -> glyph -> type': {}",
-                attribute
-            ),
+            _ => GlyphTypeType::Other(attribute.clone()),
         }
     }
 }
 
 pub struct ServiceUtiliizationType {
-    pub connect: ServiceInfoType,
-    pub disconnect: ServiceInfoType,
+    pub connect: Option<ServiceInfoType>,
+    pub disconnect: Option<ServiceInfoType>,
     // ... and the rest
 }
 
 impl From<&Element> for ServiceUtiliizationType {
     fn from(e: &Element) -> Self {
         Self {
-            connect: if let Some(e) = e.get_child("connect") {
-                ServiceInfoType::from(e)
-            } else {
-                panic!("No 'objectModel -> serviceUtilization -> connect' found")
-            },
-            disconnect: if let Some(e) = e.get_child("disconnect") {
-                ServiceInfoType::from(e)
-            } else {
-                panic!("No 'objectModel -> serviceUtilization -> connect' found")
-            },
+            connect: get_child_element_as_type(e, "connect"),
+            disconnect: get_child_element_as_type(e, "disconnect"),
         }
     }
 }
 
 pub struct ServiceInfoType {
-    pub section: String,
-    pub is_callback: bool,
-    pub is_used: bool,
+    pub section: Option<String>,
+    pub is_callback: Option<String>,
+    pub is_used: Option<String>,
 }
 
 impl From<&Element> for ServiceInfoType {
     fn from(e: &Element) -> Self {
         Self {
-            section: if let Some(a) = e.attributes.get("section") {
-                a.clone()
-            } else {
-                panic!("No 'objectModel -> serviceUtilization -> section' found")
-            },
-            is_callback: if let Some(a) = e.attributes.get("isCallback") {
-                a.parse().unwrap()
-            } else {
-                panic!("No 'objectModel -> serviceUtilization -> isCallback' found")
-            },
-            is_used: if let Some(a) = e.attributes.get("isUsed") {
-                a.parse().unwrap()
-            } else {
-                panic!("No 'objectModel -> serviceUtilization -> isUsed' found")
-            },
+            section: get_text_of_attribute(e, "section"),
+            is_callback: get_text_of_attribute(e, "isCallback"),
+            is_used: get_text_of_attribute(e, "isUsed"),
         }
     }
 }
 
 pub struct ObjectsType {
-    pub root_object_class: ObjectClassType,
+    pub root_object_class: Option<ObjectClassType>,
 }
 
 impl From<&Element> for ObjectsType {
     fn from(e: &Element) -> Self {
         Self {
-            root_object_class: if let Some(e) = e.get_child("objectClass") {
-                ObjectClassType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass' found")
-            },
+            root_object_class: get_child_element_as_type(e, "objectClass"),
         }
     }
 }
@@ -655,21 +498,13 @@ pub struct ObjectClassType {
 impl From<&Element> for ObjectClassType {
     fn from(e: &Element) -> Self {
         Self {
-            name: if let Some(e) = e.get_child("name") {
-                get_element_text(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> name' found")
-            },
-            sharing: if let Some(e) = e.get_child("sharing") {
-                SharingType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> sharing' found")
-            },
-            semantics: if let Some(e) = e.get_child("semantics") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
+            name: get_text_of_child_element_or_panic(
+                e,
+                "name",
+                "No 'objectModel -> objects -> objectClass -> name' found",
+            ),
+            sharing: get_child_element_as_type(e, "sharing").unwrap_or(SharingType::Neither),
+            semantics: get_text_of_child_element(e, "semantics"),
             attributes: {
                 let attributes = get_text_of_child_elements_as_type(e, "attribute");
                 if attributes.is_empty() {
@@ -705,79 +540,45 @@ impl From<&Element> for SharingType {
             "Subscribe" => SharingType::Subscribe,
             "PublishSubscribe" => SharingType::PublishSubscribe,
             "Neither" => SharingType::Neither,
-            _ => panic!("Unknown sharing type: {}", text),
+            _ => panic!("Unexpected sharing type: {}", text),
         }
     }
 }
 
 pub struct AttributeType {
     pub name: String,
-    pub data_type: ReferenceType,
-    pub update_type: UpdateType,
+    pub data_type: Option<ReferenceType>,
+    pub update_type: Option<UpdateType>,
     pub update_condition: Option<String>,
-    pub onwership: OwnershipType,
-    pub sharing: SharingType,
+    pub onwership: Option<OwnershipType>,
+    pub sharing: Option<SharingType>,
     pub dimensions: Option<Vec<ReferenceType>>,
-    pub transportation: ReferenceType,
-    pub order: OrderType,
+    pub transportation: Option<ReferenceType>,
+    pub order: Option<OrderType>,
     pub semantics: Option<String>,
 }
 
 impl From<&Element> for AttributeType {
     fn from(e: &Element) -> Self {
         Self {
-            name: if let Some(e) = e.get_child("name") {
-                get_element_text(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> name' found")
-            },
-            data_type: if let Some(e) = e.get_child("dataType") {
-                ReferenceType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> dataType' found")
-            },
-            update_type: if let Some(e) = e.get_child("updateType") {
-                UpdateType::from(e)
-            } else {
-                panic!(
-                    "No 'objectModel -> objects -> objectClass -> attribute -> updateType' found"
-                )
-            },
-            update_condition: if let Some(e) = e.get_child("updateCondition") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
-            onwership: if let Some(e) = e.get_child("ownership") {
-                OwnershipType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> ownership' found")
-            },
-            sharing: if let Some(e) = e.get_child("sharing") {
-                SharingType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> sharing' found")
-            },
+            name: get_text_of_child_element_or_panic(
+                e,
+                "name",
+                "No 'objectModel -> objects -> objectClass -> attribute -> name' found",
+            ),
+            data_type: get_child_element_as_type(e, "dataType"),
+            update_type: get_child_element_as_type(e, "updateType"),
+            update_condition: get_text_of_child_element(e, "updateCondition"),
+            onwership: get_child_element_as_type(e, "ownership"),
+            sharing: get_child_element_as_type(e, "sharing"),
             dimensions: if let Some(e) = e.get_child("dimensions") {
                 Some(get_text_of_child_elements_as_type(e, "dimension"))
             } else {
                 None
             },
-            transportation: if let Some(e) = e.get_child("transportation") {
-                ReferenceType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> transportation' found")
-            },
-            order: if let Some(e) = e.get_child("order") {
-                OrderType::from(e)
-            } else {
-                panic!("No 'objectModel -> objects -> objectClass -> attribute -> order' found")
-            },
-            semantics: if let Some(e) = e.get_child("semantics") {
-                Some(get_element_text(e))
-            } else {
-                None
-            },
+            transportation: get_child_element_as_type(e, "transportation"),
+            order: get_child_element_as_type(e, "order"),
+            semantics: get_text_of_child_element(e, "semantics"),
         }
     }
 }
@@ -799,6 +600,7 @@ pub enum UpdateType {
     Periodic,
     Conditional,
     Na,
+    Other(String),
 }
 
 impl From<&Element> for UpdateType {
@@ -809,7 +611,7 @@ impl From<&Element> for UpdateType {
             "Periodic" => UpdateType::Periodic,
             "Conditional" => UpdateType::Conditional,
             "NA" => UpdateType::Na,
-            _ => panic!("Unknown UpdateType: {}", text),
+            _ => UpdateType::Other(text),
         }
     }
 }
@@ -819,6 +621,7 @@ pub enum OwnershipType {
     Acquire,
     DivestAcquire,
     NoTransfer,
+    Other(String),
 }
 
 impl From<&Element> for OwnershipType {
@@ -829,7 +632,7 @@ impl From<&Element> for OwnershipType {
             "Acquire" => OwnershipType::Acquire,
             "DivestAcquire" => OwnershipType::DivestAcquire,
             "NoTransfer" => OwnershipType::NoTransfer,
-            _ => panic!("Unknown OwnershipType: {}", text),
+            _ => OwnershipType::Other(text),
         }
     }
 }
@@ -1322,47 +1125,23 @@ impl From<&Element> for RateType {
 }
 
 pub struct DataTypesType {
-    pub basic_data_representations: BasicDataRepresentationsType,
-    pub simple_data_types: SimpleDataTypesType,
-    pub enumerated_data_types: EnumeratedDataTypesType,
-    pub array_data_types: ArrayDataTypesType,
-    pub fixed_record_data_types: FixedRecordDataTypesType,
-    pub variand_record_data_types: VariantRecordDataTypesType,
+    pub basic_data_representations: Option<BasicDataRepresentationsType>,
+    pub simple_data_types: Option<SimpleDataTypesType>,
+    pub enumerated_data_types: Option<EnumeratedDataTypesType>,
+    pub array_data_types: Option<ArrayDataTypesType>,
+    pub fixed_record_data_types: Option<FixedRecordDataTypesType>,
+    pub variand_record_data_types: Option<VariantRecordDataTypesType>,
 }
 
 impl From<&Element> for DataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            basic_data_representations: get_child_element_as_type_or_panic(
-                e,
-                "basicDataRepresentations",
-                "No 'dataTypes -> basicDataRepresentations' found",
-            ),
-            simple_data_types: get_child_element_as_type_or_panic(
-                e,
-                "simpleDataTypes",
-                "No 'dataTypes -> simpleDataTypes' found",
-            ),
-            enumerated_data_types: get_child_element_as_type_or_panic(
-                e,
-                "enumeratedDataTypes",
-                "No 'dataTypes -> enumeratedDataTypes' found",
-            ),
-            array_data_types: get_child_element_as_type_or_panic(
-                e,
-                "arrayDataTypes",
-                "No 'dataTypes -> arrayDataTypes' found",
-            ),
-            fixed_record_data_types: get_child_element_as_type_or_panic(
-                e,
-                "fixedRecordDataTypes",
-                "No 'dataTypes -> fixedRecordDataTypes' found",
-            ),
-            variand_record_data_types: get_child_element_as_type_or_panic(
-                e,
-                "variantRecordDataTypes",
-                "No 'dataTypes -> variantRecordDataTypes' found",
-            ),
+            basic_data_representations: get_child_element_as_type(e, "basicDataRepresentations"),
+            simple_data_types: get_child_element_as_type(e, "simpleDataTypes"),
+            enumerated_data_types: get_child_element_as_type(e, "enumeratedDataTypes"),
+            array_data_types: get_child_element_as_type(e, "arrayDataTypes"),
+            fixed_record_data_types: get_child_element_as_type(e, "fixedRecordDataTypes"),
+            variand_record_data_types: get_child_element_as_type(e, "variantRecordDataTypes"),
         }
     }
 }
@@ -1388,44 +1167,32 @@ impl From<&Element> for BasicDataRepresentationsType {
 
 pub struct BasicDataType {
     pub name: String,
-    pub size: SizeType,
-    pub interpretation: String,
-    pub endian: EndianType,
-    pub encoding: String,
+    pub size: Option<SizeType>,
+    pub interpretation: Option<String>,
+    pub endian: Option<EndianType>,
+    pub encoding: Option<String>,
 }
 
 impl From<&Element> for BasicDataType {
     fn from(e: &Element) -> Self {
         Self {
             name: get_text_of_child_element_or_panic(e, "name", "No 'basicData -> name' found"),
-            size: get_child_element_as_type_or_panic(e, "size", "No 'basicData -> size' found"),
-            interpretation: get_text_of_child_element_or_panic(
-                e,
-                "interpretation",
-                "No 'basicData -> interpretation' found",
-            ),
-            endian: get_child_element_as_type_or_panic(
-                e,
-                "endian",
-                "No 'basicData -> endian' found",
-            ),
-            encoding: get_text_of_child_element_or_panic(
-                e,
-                "encoding",
-                "No 'basicData -> encoding' found",
-            ),
+            size: get_child_element_as_type(e, "size"),
+            interpretation: get_text_of_child_element(e, "interpretation"),
+            endian: get_child_element_as_type(e, "endian"),
+            encoding: get_text_of_child_element(e, "encoding"),
         }
     }
 }
 
 pub struct SizeType {
-    pub size: u8,
+    pub size: Option<String>,
 }
 
 impl From<&Element> for SizeType {
     fn from(e: &Element) -> Self {
         Self {
-            size: get_element_text(e).parse().unwrap(),
+            size: Some(get_element_text(e)),
         }
     }
 }
@@ -1467,7 +1234,7 @@ impl From<&Element> for SimpleDataTypesType {
 
 pub struct SimpleDataType {
     pub name: String,
-    pub representation: ReferenceType,
+    pub representation: Option<ReferenceType>,
     pub units: Option<String>,
     pub resolution: Option<String>,
     pub accuracy: Option<String>,
@@ -1478,11 +1245,7 @@ impl From<&Element> for SimpleDataType {
     fn from(e: &Element) -> Self {
         Self {
             name: get_text_of_child_element_or_panic(e, "name", "No 'simpleData -> name' found"),
-            representation: get_child_element_as_type_or_panic(
-                e,
-                "representation",
-                "No 'simpleData -> representation' found",
-            ),
+            representation: get_child_element_as_type(e, "representation"),
             units: get_text_of_child_element(e, "units"),
             resolution: get_text_of_child_element(e, "resolution"),
             accuracy: get_text_of_child_element(e, "accuracy"),
@@ -1512,7 +1275,7 @@ impl From<&Element> for EnumeratedDataTypesType {
 
 pub struct EnumeratedDataType {
     pub name: String,
-    pub representation: ReferenceType,
+    pub representation: Option<ReferenceType>,
     pub semantics: Option<String>,
     pub enumerators: Option<Vec<EnumeratorType>>,
 }
@@ -1525,11 +1288,7 @@ impl From<&Element> for EnumeratedDataType {
                 "name",
                 "No 'enumeratedData -> name' found",
             ),
-            representation: get_child_element_as_type_or_panic(
-                e,
-                "representation",
-                "No 'enumeratedData -> representation' found",
-            ),
+            representation: get_child_element_as_type(e, "representation"),
             semantics: get_text_of_child_element(e, "semantics"),
             enumerators: {
                 let enumerators = get_text_of_child_elements_as_type(e, "enumerator");
@@ -1582,9 +1341,9 @@ impl From<&Element> for ArrayDataTypesType {
 
 pub struct ArrayDataType {
     pub name: String,
-    pub data_type: ReferenceType,
-    pub cardinality: String, // needs to match a pattern
-    pub encoding: ArrayDataTypeEncodingType,
+    pub data_type: Option<ReferenceType>,
+    pub cardinality: Option<String>, // needs to match a pattern
+    pub encoding: Option<ArrayDataTypeEncodingType>,
     pub semantics: Option<String>,
 }
 
@@ -1592,21 +1351,9 @@ impl From<&Element> for ArrayDataType {
     fn from(e: &Element) -> Self {
         Self {
             name: get_text_of_child_element_or_panic(e, "name", "No 'arrayData -> name' found"),
-            data_type: get_child_element_as_type_or_panic(
-                e,
-                "representation",
-                "No 'arrayData -> representation' found",
-            ),
-            cardinality: get_text_of_child_element_or_panic(
-                e,
-                "cardinality",
-                "No 'arrayData -> cardinality' found",
-            ), // needs to match a pattern
-            encoding: get_child_element_as_type_or_panic(
-                e,
-                "encoding",
-                "No 'arrayData -> encoding' found",
-            ),
+            data_type: get_child_element_as_type(e, "representation"),
+            cardinality: get_text_of_child_element(e, "cardinality"), // needs to match a pattern
+            encoding: get_child_element_as_type(e, "encoding"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -1615,6 +1362,7 @@ impl From<&Element> for ArrayDataType {
 pub enum ArrayDataTypeEncodingType {
     HlaFixedArray,
     HlaVariableArray,
+    Other(String),
 }
 
 impl From<&Element> for ArrayDataTypeEncodingType {
@@ -1623,7 +1371,7 @@ impl From<&Element> for ArrayDataTypeEncodingType {
         match text.as_str() {
             "HLAfixedArray" => ArrayDataTypeEncodingType::HlaFixedArray,
             "HLAvariableArray" => ArrayDataTypeEncodingType::HlaVariableArray,
-            _ => panic!("Unknown array data type encoding: {}", text),
+            _ => ArrayDataTypeEncodingType::Other(text),
         }
     }
 }
@@ -1649,7 +1397,7 @@ impl From<&Element> for FixedRecordDataTypesType {
 
 pub struct FixedRecordDataType {
     pub name: String,
-    pub encoding: FixedRecordEncodingType,
+    pub encoding: Option<FixedRecordEncodingType>,
     pub semantics: Option<String>,
     pub fields: Option<Vec<FieldType>>,
 }
@@ -1662,11 +1410,7 @@ impl From<&Element> for FixedRecordDataType {
                 "name",
                 "No 'fixedRecordData -> name' found",
             ),
-            encoding: get_child_element_as_type_or_panic(
-                e,
-                "encoding",
-                "No 'fixedRecordData -> encoding' found",
-            ),
+            encoding: get_child_element_as_type(e, "encoding"),
             semantics: get_text_of_child_element(e, "semantics"),
             fields: {
                 let fields = get_text_of_child_elements_as_type(e, "field");
@@ -1682,6 +1426,7 @@ impl From<&Element> for FixedRecordDataType {
 
 pub enum FixedRecordEncodingType {
     HlaFixedRecord,
+    Other(String),
 }
 
 impl From<&Element> for FixedRecordEncodingType {
@@ -1689,14 +1434,14 @@ impl From<&Element> for FixedRecordEncodingType {
         let text = get_element_text(e);
         match text.as_str() {
             "HLAfixedRecord" => FixedRecordEncodingType::HlaFixedRecord,
-            _ => panic!("Unknown fixed record encoding: {}", text),
+            _ => FixedRecordEncodingType::Other(text),
         }
     }
 }
 
 pub struct FieldType {
     pub name: String,
-    pub data_type: ReferenceType,
+    pub data_type: Option<ReferenceType>,
     pub semantics: Option<String>,
 }
 
@@ -1708,11 +1453,7 @@ impl From<&Element> for FieldType {
                 "name",
                 "No 'fixedRecrodData -> field -> name' found",
             ),
-            data_type: get_child_element_as_type_or_panic(
-                e,
-                "dataType",
-                "No 'fixedRecordData -> field -> dataType' found",
-            ),
+            data_type: get_child_element_as_type(e, "dataType"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -1740,10 +1481,10 @@ impl From<&Element> for VariantRecordDataTypesType {
 
 pub struct VariantRecordDataType {
     pub name: String,
-    pub discriminant: String,
-    pub data_type: ReferenceType,
+    pub discriminant: Option<String>,
+    pub data_type: Option<ReferenceType>,
     pub alternatives: Option<Vec<AlternativeType>>,
-    pub encoding: VariantRecordEncodingType,
+    pub encoding: Option<VariantRecordEncodingType>,
     pub semantics: Option<String>,
 }
 
@@ -1755,16 +1496,8 @@ impl From<&Element> for VariantRecordDataType {
                 "name",
                 "No 'variantRecordData -> name' found",
             ),
-            discriminant: get_text_of_child_element_or_panic(
-                e,
-                "discriminant",
-                "No 'variantRecordData -> discriminant' found",
-            ),
-            data_type: get_child_element_as_type_or_panic(
-                e,
-                "dataType",
-                "No 'variantRecordData -> dataType' found",
-            ),
+            discriminant: get_text_of_child_element(e, "discriminant"),
+            data_type: get_child_element_as_type(e, "dataType"),
             alternatives: {
                 let alternatives = get_text_of_child_elements_as_type(e, "alternative");
                 if alternatives.is_empty() {
@@ -1773,18 +1506,14 @@ impl From<&Element> for VariantRecordDataType {
                     Some(alternatives)
                 }
             },
-            encoding: get_child_element_as_type_or_panic(
-                e,
-                "encoding",
-                "No 'variantRecordData -> encoding' found",
-            ),
+            encoding: get_child_element_as_type(e, "encoding"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
 }
 
 pub struct AlternativeType {
-    pub enumerator: String,
+    pub enumerator: Option<String>,
     pub name: Option<String>,
     pub data_type: Option<ReferenceType>,
     pub semantics: Option<String>,
@@ -1793,11 +1522,7 @@ pub struct AlternativeType {
 impl From<&Element> for AlternativeType {
     fn from(e: &Element) -> Self {
         Self {
-            enumerator: get_text_of_child_element_or_panic(
-                e,
-                "enumerator",
-                "No 'variantRecordData -> alternative -> enumerator' found",
-            ),
+            enumerator: get_text_of_child_element(e, "enumerator"),
             name: get_text_of_child_element(e, "name"),
             data_type: get_child_element_as_type(e, "dataType"),
             semantics: get_text_of_child_element(e, "semantics"),
@@ -1807,6 +1532,7 @@ impl From<&Element> for AlternativeType {
 
 pub enum VariantRecordEncodingType {
     HlaVariantRecord,
+    Other(String),
 }
 
 impl From<&Element> for VariantRecordEncodingType {
@@ -1814,7 +1540,7 @@ impl From<&Element> for VariantRecordEncodingType {
         let text = get_element_text(e);
         match text.as_str() {
             "HLAvariantRecord" => VariantRecordEncodingType::HlaVariantRecord,
-            _ => panic!("Unknown variant record encoding: {}", text),
+            _ => VariantRecordEncodingType::Other(text),
         }
     }
 }
@@ -1856,7 +1582,7 @@ pub fn parse<R: Read>(r: R) -> Result<(), ParseError> {
     let fom_as_xml = Element::parse(r)?;
     let fom = ObjectModelType::from(&fom_as_xml);
 
-    println!("{:?}", fom.model_identification.name);
+    println!("{:?}", fom.model_identification.unwrap().name);
 
     Ok(())
 }
