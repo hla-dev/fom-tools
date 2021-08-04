@@ -1,7 +1,8 @@
 use std::io::Read;
 use xmltree::{Element, ParseError, XMLNode};
 
-/// Return the trimmed text content of the provided element
+/// Return the trimmed text content of the provided element, or the empty string
+/// if the current element has no text content.
 fn get_element_text(e: &Element) -> String {
     if let Some(text) = e.get_text() {
         text.into_owned().trim().to_string()
@@ -17,7 +18,8 @@ fn get_text_of_child_element(root: &Element, child_element_name: &str) -> Option
         .map(|e| get_element_text(e))
 }
 
-///
+/// Return a copy of the attribute value associated with the attribute name for the
+/// supplied element. None if the attribute name does not exist.
 fn get_text_of_attribute(element: &Element, attribute_name: &str) -> Option<String> {
     element.attributes.get(attribute_name).cloned()
 }
@@ -73,20 +75,6 @@ fn get_child_element_as_type_or_panic<'a, T: From<&'a Element>>(
     }
 }
 
-/// Return an instance of the generic type created from the named attribute
-/// of the provided element. Panic, with the provided panic message, if the
-/// named attribute does not exist
-fn get_attribute_as_type_or_panic<'a, T: From<&'a String>>(
-    element: &'a Element,
-    attribute_name: &'a str,
-    panic_message: &'static str,
-) -> T {
-    match get_attribute_as_type(element, attribute_name) {
-        Some(attribute_value) => attribute_value,
-        None => panic!("{}", panic_message),
-    }
-}
-
 /// Return the trimmed text of all named child elements of the provided root element.
 /// The returned vector will be empty if no such child elements exist.
 fn get_text_of_child_elements(root: &Element, child_element_name: &str) -> Vec<String> {
@@ -100,10 +88,25 @@ fn get_text_of_child_elements(root: &Element, child_element_name: &str) -> Vec<S
         .collect()
 }
 
+fn map_vec_to_option<T>(v: Vec<T>) -> Option<Vec<T>> {
+    if v.is_empty() {
+        None
+    } else {
+        Some(v)
+    }
+}
+
+fn get_text_of_child_elements_as_option(
+    root: &Element,
+    child_element_name: &str,
+) -> Option<Vec<String>> {
+    map_vec_to_option(get_text_of_child_elements(root, child_element_name))
+}
+
 /// Return instances of the generic type created from each of the named child
 /// elements of the provided root element. The returned vector will be empty
 /// if no such child elements exist.
-fn get_text_of_child_elements_as_type<'a, T: From<&'a Element>>(
+fn get_child_elements_as_type<'a, T: From<&'a Element>>(
     root: &'a Element,
     child_element_name: &str,
 ) -> Vec<T> {
@@ -115,6 +118,13 @@ fn get_text_of_child_elements_as_type<'a, T: From<&'a Element>>(
         })
         .map(|xml_node| T::from(xml_node.as_element().unwrap()))
         .collect()
+}
+
+fn get_child_elements_as_type_as_option<'a, T: From<&'a Element>>(
+    root: &'a Element,
+    child_element_name: &str,
+) -> Option<Vec<T>> {
+    map_vec_to_option(get_child_elements_as_type(root, child_element_name))
 }
 
 pub struct ObjectModelType {
@@ -180,50 +190,15 @@ impl From<&Element> for ModelIdentificationType {
             version: get_text_of_child_element(e, "version"),
             modification_date: get_text_of_child_element(e, "modificationDate"),
             security_classification: get_child_element_as_type(e, "securityClassification"),
-            release_restriction: {
-                let release_restrictions = get_text_of_child_elements(e, "releaseRestriction");
-                if release_restrictions.is_empty() {
-                    None
-                } else {
-                    Some(release_restrictions)
-                }
-            },
+            release_restriction: get_text_of_child_elements_as_option(e, "releaseRestriction"),
             purpose: get_text_of_child_element(e, "purpose"),
             application_domain: get_child_element_as_type(e, "applicationDomain"),
             description: get_text_of_child_element(e, "description"),
             use_limitation: get_text_of_child_element(e, "useLimitation"),
-            use_history: {
-                let use_history = get_text_of_child_elements(e, "useHistory");
-                if use_history.is_empty() {
-                    None
-                } else {
-                    Some(use_history)
-                }
-            },
-            keywords: {
-                let keywords = get_text_of_child_elements_as_type(e, "keyword");
-                if keywords.is_empty() {
-                    None
-                } else {
-                    Some(keywords)
-                }
-            },
-            poc: {
-                let pocs = get_text_of_child_elements_as_type(e, "poc");
-                if pocs.is_empty() {
-                    None
-                } else {
-                    Some(pocs)
-                }
-            },
-            references: {
-                let references = get_text_of_child_elements_as_type(e, "reference");
-                if references.is_empty() {
-                    None
-                } else {
-                    Some(references)
-                }
-            },
+            use_history: get_text_of_child_elements_as_option(e, "useHistory"),
+            keywords: get_child_elements_as_type_as_option(e, "keyword"),
+            poc: get_child_elements_as_type_as_option(e, "poc"),
+            references: get_child_elements_as_type_as_option(e, "reference"),
             other: get_text_of_child_element(e, "other"),
             glyph: get_child_element_as_type(e, "glyph"),
         }
@@ -319,22 +294,8 @@ impl From<&Element> for PocType {
             poc_type: get_child_element_as_type(e, "pocType"),
             poc_name: get_text_of_child_element(e, "pocName"),
             poc_org: get_text_of_child_element(e, "pocOrg"),
-            poc_telephones: {
-                let telephones = get_text_of_child_elements(e, "pocTelephone");
-                if telephones.is_empty() {
-                    None
-                } else {
-                    Some(telephones)
-                }
-            },
-            poc_emails: {
-                let emails = get_text_of_child_elements(e, "pocEmail");
-                if emails.is_empty() {
-                    None
-                } else {
-                    Some(emails)
-                }
-            },
+            poc_telephones: get_text_of_child_elements_as_option(e, "pocTelephone"),
+            poc_emails: get_text_of_child_elements_as_option(e, "pocEmail"),
         }
     }
 }
@@ -481,22 +442,8 @@ impl From<&Element> for ObjectClassType {
             ),
             sharing: get_child_element_as_type(e, "sharing").unwrap_or(SharingType::Neither),
             semantics: get_text_of_child_element(e, "semantics"),
-            attributes: {
-                let attributes = get_text_of_child_elements_as_type(e, "attribute");
-                if attributes.is_empty() {
-                    None
-                } else {
-                    Some(attributes)
-                }
-            },
-            object_classes: {
-                let object_classes = get_text_of_child_elements_as_type(e, "objectClasses");
-                if object_classes.is_empty() {
-                    None
-                } else {
-                    Some(object_classes)
-                }
-            },
+            attributes: get_child_elements_as_type_as_option(e, "attribute"),
+            object_classes: get_child_elements_as_type_as_option(e, "objectClasses"),
         }
     }
 }
@@ -549,7 +496,7 @@ impl From<&Element> for AttributeType {
             sharing: get_child_element_as_type(e, "sharing"),
             dimensions: e
                 .get_child("dimensions")
-                .map(|e| get_text_of_child_elements_as_type(e, "dimension")),
+                .map(|e| get_child_elements_as_type(e, "dimension")),
             transportation: get_child_element_as_type(e, "transportation"),
             order: get_child_element_as_type(e, "order"),
             semantics: get_text_of_child_element(e, "semantics"),
@@ -645,10 +592,10 @@ impl From<&Element> for InteractionsType {
 
 pub struct InteractionClassType {
     pub name: String,
-    pub sharing: SharingType,
+    pub sharing: Option<SharingType>,
     pub dimensions: Option<Vec<ReferenceType>>,
-    pub transportation: ReferenceType,
-    pub order: OrderType,
+    pub transportation: Option<ReferenceType>,
+    pub order: Option<OrderType>,
     pub semantics: Option<String>,
     pub parameters: Option<Vec<ParameterType>>,
     pub interaction_classes: Option<Vec<InteractionClassType>>,
@@ -662,53 +609,20 @@ impl From<&Element> for InteractionClassType {
                 "name",
                 "No 'objectModel -> interactions -> interactionClass -> name' found",
             ),
-            sharing: get_child_element_as_type_or_panic(
-                e,
-                "sharing",
-                "No 'objectModel -> interactions -> interactionClass -> sharing' found",
-            ),
-            dimensions: {
-                let dimensions = get_text_of_child_elements_as_type(e, "dimension");
-                if dimensions.is_empty() {
-                    None
-                } else {
-                    Some(dimensions)
-                }
-            },
-            transportation: get_child_element_as_type_or_panic(
-                e,
-                "transportation",
-                "No 'objectModel -> interactions -> interactionClass -> transportation' found",
-            ),
-            order: get_child_element_as_type_or_panic(
-                e,
-                "order",
-                "No 'objectModel -> interactions -> interactionClass -> order",
-            ),
+            sharing: get_child_element_as_type(e, "sharing"),
+            dimensions: get_child_elements_as_type_as_option(e, "dimension"),
+            transportation: get_child_element_as_type(e, "transportation"),
+            order: get_child_element_as_type(e, "order"),
             semantics: get_text_of_child_element(e, "semantics"),
-            parameters: {
-                let parameters = get_text_of_child_elements_as_type(e, "parameter");
-                if parameters.is_empty() {
-                    None
-                } else {
-                    Some(parameters)
-                }
-            },
-            interaction_classes: {
-                let interaction_classes = get_text_of_child_elements_as_type(e, "interactionClass");
-                if interaction_classes.is_empty() {
-                    None
-                } else {
-                    Some(interaction_classes)
-                }
-            },
+            parameters: get_child_elements_as_type_as_option(e, "parameter"),
+            interaction_classes: get_child_elements_as_type_as_option(e, "interactionClass"),
         }
     }
 }
 
 pub struct ParameterType {
     pub name: String,
-    pub data_type: ReferenceType,
+    pub data_type: Option<ReferenceType>,
     pub semantics: Option<String>,
 }
 
@@ -720,11 +634,7 @@ impl From<&Element> for ParameterType {
                 "name",
                 "No 'interactions -> interactionClass -> parameter -> name' found",
             ),
-            data_type: get_child_element_as_type_or_panic(
-                e,
-                "dataType",
-                "No 'interactions -> interactionClass -> parameter -> dataType' found",
-            ),
+            data_type: get_child_element_as_type(e, "dataType"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -794,18 +704,14 @@ impl From<&Element> for TagsType {
 }
 
 pub struct TagType {
-    pub data_type: ReferenceType,
+    pub data_type: Option<ReferenceType>,
     pub semantics: Option<String>,
 }
 
 impl From<&Element> for TagType {
     fn from(e: &Element) -> Self {
         Self {
-            data_type: get_child_element_as_type_or_panic(
-                e,
-                "dataType",
-                "No 'tag type -> dataType' found",
-            ),
+            data_type: get_child_element_as_type(e, "dataType"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -818,15 +724,7 @@ pub struct SynchronizationsType {
 impl From<&Element> for SynchronizationsType {
     fn from(e: &Element) -> Self {
         Self {
-            synchronization_points: {
-                let synchronization_points =
-                    get_text_of_child_elements_as_type(e, "synchronizationPoint");
-                if synchronization_points.is_empty() {
-                    None
-                } else {
-                    Some(synchronization_points)
-                }
-            },
+            synchronization_points: get_child_elements_as_type_as_option(e, "synchronizationPoint"),
         }
     }
 }
@@ -834,7 +732,7 @@ impl From<&Element> for SynchronizationsType {
 pub struct SynchronizationPointType {
     pub label: String,
     pub data_type: Option<ReferenceType>,
-    pub capability: CapabilityType,
+    pub capability: Option<CapabilityType>,
     pub semantics: Option<String>,
 }
 
@@ -847,11 +745,7 @@ impl From<&Element> for SynchronizationPointType {
                 "No 'synchronizationPoint -> label' found",
             ),
             data_type: get_child_element_as_type(e, "dataType"),
-            capability: get_child_element_as_type_or_panic(
-                e,
-                "capability",
-                "No 'synchronizationPoint -> capability' found",
-            ),
+            capability: get_child_element_as_type(e, "capability"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -886,21 +780,14 @@ pub struct TransportationsType {
 impl From<&Element> for TransportationsType {
     fn from(e: &Element) -> Self {
         Self {
-            transportations: {
-                let transportations = get_text_of_child_elements_as_type(e, "transportation");
-                if transportations.is_empty() {
-                    None
-                } else {
-                    Some(transportations)
-                }
-            },
+            transportations: get_child_elements_as_type_as_option(e, "transportation"),
         }
     }
 }
 
 pub struct TransportationType {
     pub name: String,
-    pub reliable: ReliableType,
+    pub reliable: Option<ReliableType>,
     pub semantics: Option<String>,
 }
 
@@ -912,11 +799,7 @@ impl From<&Element> for TransportationType {
                 "name",
                 "No 'transportation -> name' found",
             ),
-            reliable: get_child_element_as_type_or_panic(
-                e,
-                "reliable",
-                "No 'transportation -> reliable' found",
-            ),
+            reliable: get_child_element_as_type(e, "reliable"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -939,77 +822,45 @@ impl From<&Element> for ReliableType {
 }
 
 pub struct SwitchesType {
-    pub auto_provide: SwitchType,
-    pub convey_region_designator_sets: SwitchType,
-    pub convey_producing_federate: SwitchType,
-    pub attribute_scope_advisory: SwitchType,
-    pub attribute_relevance_advisory: SwitchType,
-    pub object_class_relevance_advisory: SwitchType,
-    pub interaction_relevance_advisory: SwitchType,
-    pub service_reporting: SwitchType,
-    pub exception_reporting: SwitchType,
-    pub delay_subscription_evaluation: SwitchType,
-    pub automatic_resign_action: ResignSwitchType,
+    pub auto_provide: Option<SwitchType>,
+    pub convey_region_designator_sets: Option<SwitchType>,
+    pub convey_producing_federate: Option<SwitchType>,
+    pub attribute_scope_advisory: Option<SwitchType>,
+    pub attribute_relevance_advisory: Option<SwitchType>,
+    pub object_class_relevance_advisory: Option<SwitchType>,
+    pub interaction_relevance_advisory: Option<SwitchType>,
+    pub service_reporting: Option<SwitchType>,
+    pub exception_reporting: Option<SwitchType>,
+    pub delay_subscription_evaluation: Option<SwitchType>,
+    pub automatic_resign_action: Option<ResignSwitchType>,
 }
 
 impl From<&Element> for SwitchesType {
     fn from(e: &Element) -> Self {
         Self {
-            auto_provide: get_attribute_as_type_or_panic(
-                e,
-                "auto_provide",
-                "No 'switch -> auto_provide' found",
-            ),
-            convey_region_designator_sets: get_attribute_as_type_or_panic(
+            auto_provide: get_attribute_as_type(e, "auto_provide"),
+            convey_region_designator_sets: get_attribute_as_type(
                 e,
                 "convey_region_designator_sets",
-                "No 'switch -> convey_region_designator_sets' found",
             ),
-            convey_producing_federate: get_attribute_as_type_or_panic(
-                e,
-                "convey_producing_federate",
-                "No 'switch -> convey_producing_federate' found",
-            ),
-            attribute_scope_advisory: get_attribute_as_type_or_panic(
-                e,
-                "attribute_scope_advisory",
-                "No 'switch -> attribute_scope_advisory' found",
-            ),
-            attribute_relevance_advisory: get_attribute_as_type_or_panic(
-                e,
-                "attribute_relevance_advisory",
-                "No 'switch -> attribute_relevance_advisory' found",
-            ),
-            object_class_relevance_advisory: get_attribute_as_type_or_panic(
+            convey_producing_federate: get_attribute_as_type(e, "convey_producing_federate"),
+            attribute_scope_advisory: get_attribute_as_type(e, "attribute_scope_advisory"),
+            attribute_relevance_advisory: get_attribute_as_type(e, "attribute_relevance_advisory"),
+            object_class_relevance_advisory: get_attribute_as_type(
                 e,
                 "object_class_relevance_advisory",
-                "No 'switch -> object_class_relevance_advisory' found",
             ),
-            interaction_relevance_advisory: get_attribute_as_type_or_panic(
+            interaction_relevance_advisory: get_attribute_as_type(
                 e,
                 "interaction_relevance_advisory",
-                "No 'switch -> interaction_relevance_advisory' found",
             ),
-            service_reporting: get_attribute_as_type_or_panic(
-                e,
-                "service_reporting",
-                "No 'switch -> service_reporting' found",
-            ),
-            exception_reporting: get_attribute_as_type_or_panic(
-                e,
-                "exception_reporting",
-                "No 'switch -> exception_reporting' found",
-            ),
-            delay_subscription_evaluation: get_attribute_as_type_or_panic(
+            service_reporting: get_attribute_as_type(e, "service_reporting"),
+            exception_reporting: get_attribute_as_type(e, "exception_reporting"),
+            delay_subscription_evaluation: get_attribute_as_type(
                 e,
                 "delay_subscription_evaluation",
-                "No 'switch -> delay_subscription_evaluation' found",
             ),
-            automatic_resign_action: get_attribute_as_type_or_panic(
-                e,
-                "automatic_resign_action",
-                "No 'switch -> automatic_resign_action' found",
-            ),
+            automatic_resign_action: get_attribute_as_type(e, "automatic_resign_action"),
         }
     }
 }
@@ -1058,21 +909,14 @@ pub struct UpdateRatesType {
 impl From<&Element> for UpdateRatesType {
     fn from(e: &Element) -> Self {
         Self {
-            update_rates: {
-                let update_rates = get_text_of_child_elements_as_type(e, "updateRate");
-                if update_rates.is_empty() {
-                    None
-                } else {
-                    Some(update_rates)
-                }
-            },
+            update_rates: get_child_elements_as_type_as_option(e, "updateRate"),
         }
     }
 }
 
 pub struct UpdateRateType {
     pub name: String,
-    pub rate: RateType,
+    pub rate: Option<RateType>,
     pub semantics: Option<String>,
 }
 
@@ -1080,7 +924,7 @@ impl From<&Element> for UpdateRateType {
     fn from(e: &Element) -> Self {
         Self {
             name: get_text_of_child_element_or_panic(e, "name", "No 'updateRate -> name' found"),
-            rate: get_child_element_as_type_or_panic(e, "rate", "No 'updateRate -> rate' found"),
+            rate: get_child_element_as_type(e, "rate"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
     }
@@ -1127,14 +971,7 @@ pub struct BasicDataRepresentationsType {
 impl From<&Element> for BasicDataRepresentationsType {
     fn from(e: &Element) -> Self {
         Self {
-            basic_datas: {
-                let basic_datas = get_text_of_child_elements_as_type(e, "basicData");
-                if basic_datas.is_empty() {
-                    None
-                } else {
-                    Some(basic_datas)
-                }
-            },
+            basic_datas: get_child_elements_as_type_as_option(e, "basicData"),
         }
     }
 }
@@ -1194,14 +1031,7 @@ pub struct SimpleDataTypesType {
 impl From<&Element> for SimpleDataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            simple_datas: {
-                let simple_datas = get_text_of_child_elements_as_type(e, "simpleData");
-                if simple_datas.is_empty() {
-                    None
-                } else {
-                    Some(simple_datas)
-                }
-            },
+            simple_datas: get_child_elements_as_type_as_option(e, "simpleData"),
         }
     }
 }
@@ -1235,14 +1065,7 @@ pub struct EnumeratedDataTypesType {
 impl From<&Element> for EnumeratedDataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            enumerated_datas: {
-                let enumerated_datas = get_text_of_child_elements_as_type(e, "enumeratedData");
-                if enumerated_datas.is_empty() {
-                    None
-                } else {
-                    Some(enumerated_datas)
-                }
-            },
+            enumerated_datas: get_child_elements_as_type_as_option(e, "enumeratedData"),
         }
     }
 }
@@ -1264,14 +1087,7 @@ impl From<&Element> for EnumeratedDataType {
             ),
             representation: get_child_element_as_type(e, "representation"),
             semantics: get_text_of_child_element(e, "semantics"),
-            enumerators: {
-                let enumerators = get_text_of_child_elements_as_type(e, "enumerator");
-                if enumerators.is_empty() {
-                    None
-                } else {
-                    Some(enumerators)
-                }
-            },
+            enumerators: get_child_elements_as_type_as_option(e, "enumerator"),
         }
     }
 }
@@ -1301,14 +1117,7 @@ pub struct ArrayDataTypesType {
 impl From<&Element> for ArrayDataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            array_datas: {
-                let array_datas = get_text_of_child_elements_as_type(e, "arrayData");
-                if array_datas.is_empty() {
-                    None
-                } else {
-                    Some(array_datas)
-                }
-            },
+            array_datas: get_child_elements_as_type_as_option(e, "arrayData"),
         }
     }
 }
@@ -1357,14 +1166,7 @@ pub struct FixedRecordDataTypesType {
 impl From<&Element> for FixedRecordDataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            fixed_record_datas: {
-                let fixed_record_datas = get_text_of_child_elements_as_type(e, "fixedRecordData");
-                if fixed_record_datas.is_empty() {
-                    None
-                } else {
-                    Some(fixed_record_datas)
-                }
-            },
+            fixed_record_datas: get_child_elements_as_type_as_option(e, "fixedRecordData"),
         }
     }
 }
@@ -1386,14 +1188,7 @@ impl From<&Element> for FixedRecordDataType {
             ),
             encoding: get_child_element_as_type(e, "encoding"),
             semantics: get_text_of_child_element(e, "semantics"),
-            fields: {
-                let fields = get_text_of_child_elements_as_type(e, "field");
-                if fields.is_empty() {
-                    None
-                } else {
-                    Some(fields)
-                }
-            },
+            fields: get_child_elements_as_type_as_option(e, "field"),
         }
     }
 }
@@ -1440,15 +1235,7 @@ pub struct VariantRecordDataTypesType {
 impl From<&Element> for VariantRecordDataTypesType {
     fn from(e: &Element) -> Self {
         Self {
-            variant_record_datas: {
-                let variant_record_datas =
-                    get_text_of_child_elements_as_type(e, "variantRecordData");
-                if variant_record_datas.is_empty() {
-                    None
-                } else {
-                    Some(variant_record_datas)
-                }
-            },
+            variant_record_datas: get_child_elements_as_type_as_option(e, "variantRecordData"),
         }
     }
 }
@@ -1472,14 +1259,7 @@ impl From<&Element> for VariantRecordDataType {
             ),
             discriminant: get_text_of_child_element(e, "discriminant"),
             data_type: get_child_element_as_type(e, "dataType"),
-            alternatives: {
-                let alternatives = get_text_of_child_elements_as_type(e, "alternative");
-                if alternatives.is_empty() {
-                    None
-                } else {
-                    Some(alternatives)
-                }
-            },
+            alternatives: get_child_elements_as_type_as_option(e, "alternative"),
             encoding: get_child_element_as_type(e, "encoding"),
             semantics: get_text_of_child_element(e, "semantics"),
         }
@@ -1526,14 +1306,7 @@ pub struct NotesType {
 impl From<&Element> for NotesType {
     fn from(e: &Element) -> Self {
         Self {
-            notes: {
-                let notes = get_text_of_child_elements_as_type(e, "note");
-                if notes.is_empty() {
-                    None
-                } else {
-                    Some(notes)
-                }
-            },
+            notes: get_child_elements_as_type_as_option(e, "note"),
         }
     }
 }
